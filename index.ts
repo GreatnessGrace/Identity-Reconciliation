@@ -1,7 +1,11 @@
 import express from 'express';
 import { AppDataSource } from './src/data-source';
+import contactRouter from './src/router/contactRouter';
 
 const app = express();
+app.use(express.json());
+
+app.use('/api', contactRouter);
 
 
 AppDataSource.initialize().then(() => {
