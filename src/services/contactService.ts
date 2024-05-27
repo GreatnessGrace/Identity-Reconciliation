@@ -23,6 +23,53 @@ export const identifyContact = async (email: string | null, phoneNumber: string 
   let primaryContact: any;
   let secondaryContacts: Contact[] = [];
 
+  // Check if there's an existing contact with both the same email and phone number
+  let duplicateContact: Contact | undefined;
+  for (const contact of existingContacts) {
+    if ((!email || contact.email === email) && (!phoneNumber || contact.phoneNumber === phoneNumber)) {
+      duplicateContact = contact;
+      break;
+    }
+  }
+
+  if (duplicateContact) {
+    // Find the primary contact by checking if the duplicate contact is primary or finding its linked primary contact
+    for (const contact of existingContacts) {
+      if (contact.linkPrecedence === 'primary') {
+        primaryContact = contact;
+        break;
+      }
+    }
+
+    // If no primary contact is found, use the duplicate contact itself
+    if (!primaryContact) {
+      primaryContact = duplicateContact;
+    }
+
+    // populate the secondaryContacts 
+    for (const contact of existingContacts) {
+      if (contact.linkedId === primaryContact.id && contact.id !== primaryContact.id) {
+        secondaryContacts.push(contact);
+      }
+    }
+
+    // Additional query for linked contacts if secondaryContacts is empty
+    if (secondaryContacts.length === 0 && primaryContact) {
+      const linkedContacts = await contactRepository.createQueryBuilder('contact')
+        .where('contact.linkedId = :linkedId', { linkedId: primaryContact.id })
+        .getMany();
+
+      secondaryContacts = linkedContacts;
+    }
+
+    return {
+      primaryContactId: primaryContact.id,
+      emails: [primaryContact.email, ...secondaryContacts.map(sc => sc.email)].filter(Boolean),
+      phoneNumbers: [primaryContact.phoneNumber, ...secondaryContacts.map(sc => sc.phoneNumber)].filter(Boolean),
+      secondaryContactIds: secondaryContacts.map(sc => sc.id)
+    };
+  }
+
   if (existingContacts.length === 0) {
     // No existing contact, create a new primary contact
     primaryContact = new Contact();
