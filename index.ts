@@ -1,7 +1,7 @@
 import express from 'express';
-import { AppDataSource } from './data-source';
-import { Contact } from './entity/contact';
-import contactRouter from './router/contactRouter';
+import { AppDataSource } from './src/data-source';
+import { Contact } from './src/entity/contact';
+import contactRouter from './src/router/contactRouter';
 
 const app = express();
 app.use(express.json());
