@@ -5,8 +5,13 @@ import contactRouter from './src/router/contactRouter';
 
 const app = express();
 app.use(express.json());
+import path from 'path';
 
 app.use('/', contactRouter);
+
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 AppDataSource.initialize().then(() => {
   app.listen(10000 , () => {
